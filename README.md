@@ -1,4 +1,4 @@
-# Trading Bot
+# 🤑 Trading Bot 💶
 
 It's a trading bot that I'm building using the [Alpaca API](https://github.com/alpacahq/alpaca-trade-api-python).
 
