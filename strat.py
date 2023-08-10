@@ -85,7 +85,7 @@ def main():
     tqqq_current_price = float(tqqq_data['c'].iloc[-1])
 
     # strat execution
-    if spy_current_price > get_moving_average(spy_data, spy_ma_period)[1]:
+    if spy_current_price > get_moving_average(spy_data, spy_ma_period)[len(spy_data) - 1]:
         if tqqq_rsi > 79:
             open_position(uvxy_ticker, float(trading_client.get_account().cash))
             if spxl_rsi > 80:
@@ -100,7 +100,7 @@ def main():
                 open_position(upro_ticker, float(trading_client.get_account().cash))
             else:
                 if tqqq_current_price < tqqq_ma:
-                    if sqqq_rsi > get_rsi(tlt_data, 10)[-1]:
+                    if sqqq_rsi > get_rsi(tlt_data, 10)[len(sqqq_data) - 1]:
                         open_position(sqqq_ticker, float(trading_client.get_account().cash))
                     else:
                         open_position(tlt_ticker, float(trading_client.get_account().cash))
