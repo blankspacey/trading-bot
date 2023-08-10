@@ -4,11 +4,18 @@ It's a trading bot that I'm building using the [Alpaca API](https://github.com/a
 
 # Usage
 
-Though in early stages, it's not a complicated bot at all to use. It will have several different strategies that you can make use of.
+Though in early stages, I'm currently building the bot according to an ETF called TQQQ that tracks the QQQ. TQQQ is a leveraged ETF, meaning that you have more buying power than your capital would allow you to.
 
-Currently there's only one:
+At the end of this project I'd like to employ the bot for Mini FTSE MIB contracts, so it'll be operating on the Italian futures market.
 
-* TQQQ Long Term Holding
+# Features
+
+The bot can do the following things:
+
+* Submit *market* orders
+* Retrieve up to 300 days of data for each ticker (open, close, high, low, vwap)
+* Calculate RSI and MA values for each ticker
+* Adjust positions based off of these values
 
 # Additional things
 
