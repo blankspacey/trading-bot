@@ -40,6 +40,7 @@ def open_position(ticker, amount):
     if cash_available >= amount:
         if(trading_client.get_open_position(symbol_or_asset_id=ticker)):
             return False
+        trading_client.close_all_positions(cancel_orders=True)
         trading_client.submit_order(market_order_data)
         return True
     else:
