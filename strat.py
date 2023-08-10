@@ -36,23 +36,15 @@ def open_position(ticker, amount):
         side=OrderSide.BUY,
         time_in_force=TimeInForce.DAY
     )
-    
+
     if cash_available >= amount:
+        if(trading_client.get_open_position(symbol_or_asset_id=ticker)):
+            return False
         trading_client.submit_order(market_order_data)
         return True
     else:
         print("Not enough funds to execute trade.\n")
         return False
-
-def close_position(ticker):
-    market_order_data = MarketOrderRequest(
-        symbol=ticker,
-        qty='all',
-        side=OrderSide.SELL,
-        time_in_force=TimeInForce.GTC
-    )
-
-    trading_client.submit_order(market_order_data)
 
 def main():
     # tickers
