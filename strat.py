@@ -81,11 +81,11 @@ def main():
     tlt_data = get_prices(tlt_ticker, tlt_rsi_period)
 
     # calculate indicators
-    spy_rsi = get_rsi(spy_data, spy_rsi_period)[-1]
-    tqqq_rsi = get_rsi(tqqq_data, tqqq_rsi_period)[-1]
-    spxl_rsi = get_rsi(spxl_data, spxl_rsi_period)[-1]
-    tqqq_ma = get_moving_average(tqqq_data, tqqq_ma_period)[-1]
-    sqqq_rsi = get_rsi(sqqq_data, sqqq_rsi_period)[-1]
+    spy_rsi = get_rsi(spy_data, spy_rsi_period)[len(spy_data) - 1]
+    tqqq_rsi = get_rsi(tqqq_data, tqqq_rsi_period)[len(tqqq_data) - 1]
+    spxl_rsi = get_rsi(spxl_data, spxl_rsi_period)[len(spxl_data) - 1]
+    tqqq_ma = get_moving_average(tqqq_data, tqqq_ma_period)[len(tqqq_data) - 1]
+    sqqq_rsi = get_rsi(sqqq_data, sqqq_rsi_period)[len(sqqq_data) - 1]
 
     # current prices
     spy_current_price = float(spy_data['c'].iloc[-1])
