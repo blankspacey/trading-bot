@@ -1,4 +1,4 @@
-from config import *
+from modules import *
 
 today = dt.date.today()
 start_date = today - dt.timedelta(days=300)
@@ -9,11 +9,11 @@ data_client = StockHistoricalDataClient(API_KEY, SECRET_KEY, raw_data=True)
 
 def get_prices(ticker, limit):
     stock_bars_data = StockBarsRequest(
-    symbol_or_symbols=ticker, 
-    start=pd.to_datetime(start_date),
-    end=pd.to_datetime(end_date), 
-    timeframe=TimeFrame.Day,
-    limit=limit
+        symbol_or_symbols=ticker, 
+        start=pd.to_datetime(start_date),
+        end=pd.to_datetime(end_date), 
+        timeframe=TimeFrame.Day,
+        limit=limit
     )
 
     barset = data_client.get_stock_bars(stock_bars_data)
