@@ -1,4 +1,4 @@
-from keys import API_KEY, SECRET_KEY
+import os
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -8,6 +8,9 @@ from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import TimeInForce, OrderSide
 from alpaca.data.requests import StockBarsRequest, TimeFrame, DataFeed
 from alpaca.data.historical import StockHistoricalDataClient
+
+API_KEY = os.environ.get('API_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 today = dt.date.today()
 start_date = today - dt.timedelta(days=300)
