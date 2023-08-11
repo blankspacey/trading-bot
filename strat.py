@@ -1,4 +1,5 @@
 import os
+import smtplib
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -6,11 +7,14 @@ import talib as ta
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import TimeInForce, OrderSide
-from alpaca.data.requests import StockBarsRequest, TimeFrame, DataFeed
+from alpaca.data.requests import StockBarsRequest, TimeFrame, StockLatestQuoteRequest
 from alpaca.data.historical import StockHistoricalDataClient
 
 API_KEY = os.environ.get('API_KEY')
 SECRET_KEY = os.environ.get('SECRET_KEY')
+SENDER = os.environ.get('EMAIL')
+RECEIVER = os.environ.get('EMAIL')
+PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
 today = dt.date.today()
 start_date = today - dt.timedelta(days=300)
@@ -49,14 +53,71 @@ def open_position(ticker, amount):
         time_in_force=TimeInForce.DAY
     )
 
+    price_data = StockLatestQuoteRequest(
+        symbol_or_symbols=ticker
+    )
+
+    price = pd.DataFrame(data_client.get_stock_latest_bar(price_data))
+
     if cash_available >= amount:
         if(trading_client.get_open_position(symbol_or_asset_id=ticker)):
+            message = f"""
+                From: trading-bot{SENDER}
+                to: Ray{RECEIVER}
+                Subject: No modifications\n
+                Position for ticker {ticker} already open so no modifications were made to current positions.
+            """
+            
+            server = smtplib.SMTP("smtp.gmail.com", 587)
+            server.starttls()
+
+            try:
+                server.login(SENDER, PASSWORD)
+                print("Logged in.\n")
+                server.sendmail(SENDER, RECEIVER, message)
+                print("Email has been sent.\n")
+            except smtplib.SMTPAuthenticationError:
+                print("Unable to sign in.\n")
             return False
+        
         trading_client.close_all_positions(cancel_orders=True)
         trading_client.submit_order(market_order_data)
+
+        message = f"""
+                From: trading-bot{SENDER}
+                to: Ray{RECEIVER}
+                Subject: Submited Order\n
+                Bought {market_order_data.qty} of {ticker} at ${price['c']} per share.
+            """
+        
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+
+        try:
+            server.login(SENDER, PASSWORD)
+            print("Logged in.\n")
+            server.sendmail(SENDER, RECEIVER, message)
+            print("Email has been sent.\n")
+        except smtplib.SMTPAuthenticationError:
+            print("Unable to sign in.\n")
         return True
     else:
-        print("Not enough funds to execute trade.\n")
+        message = f"""
+                From: trading-bot{SENDER}
+                to: Ray{RECEIVER}
+                Subject: Order failed\n
+                Tried buying {market_order_data.qty} of {ticker} at ${price} per share but insufficient funds.
+            """
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+
+        try:
+            server.login(SENDER, PASSWORD)
+            print("Logged in.\n")
+            server.sendmail(SENDER, RECEIVER, message)
+            print("Email has been sent.\n")
+        except smtplib.SMTPAuthenticationError:
+            print("Unable to sign in.\n")
         return False
 
 def main():
