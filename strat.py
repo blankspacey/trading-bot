@@ -3,6 +3,7 @@ import datetime as dt
 import pandas as pd
 import numpy as np
 import talib as ta
+from trycourier import Courier
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import TimeInForce, OrderSide
@@ -12,13 +13,35 @@ from alpaca.data.historical.stock import StockHistoricalDataClient
 
 API_KEY = os.environ.get('API_KEY')
 SECRET_KEY = os.environ.get('SECRET_KEY')
+COURIER_TOKEN = os.environ.get('COURIER_TOKEN')
+EMAIL = os.environ.get('EMAIL')
 
 today = dt.date.today()
 start_date = today - dt.timedelta(days=300)
 end_date = today - dt.timedelta(days=1)
 
+courier_client = Courier(auth_token=COURIER_TOKEN)
 trading_client = TradingClient(API_KEY, SECRET_KEY, paper=True)
 data_client = StockHistoricalDataClient(API_KEY, SECRET_KEY, raw_data=True)
+                                     
+def sendEmail(title, body):
+    resp = courier_client.send_message(
+        message = {
+            "to": {
+                "email": EMAIL
+            },
+            "content": {
+                "title": title,
+                "body": body
+            },
+            "routing": {
+                "method": "single",
+                "channels": ["email"]
+            }
+        }
+    )
+    print(resp["requestId"])
+
 
 def get_prices(ticker, limit):
     stock_bars_data = StockBarsRequest(
