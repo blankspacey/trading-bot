@@ -90,7 +90,7 @@ def openPosition(ticker, amount):
         if(flag):
             title = f"No modifications to {ticker} position"
             body = f"""Attempted to buy ${market_order_data.notional} worth of shares of {ticker} at ${closing_price} per share 
-                    but found position or order already open under this ticker."""
+                    but found position already open under this ticker."""
             sendEmail(title=title, body=body)
             return False
         else:
