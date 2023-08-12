@@ -18,7 +18,7 @@ EMAIL = os.environ.get('EMAIL')
 
 today = dt.date.today()
 start_date = today - dt.timedelta(days=300)
-end_date = today - dt.timedelta(days=1)
+end_date = today - dt.timedelta(minutes=15)
 
 courier_client = Courier(auth_token=COURIER_TOKEN)
 trading_client = TradingClient(API_KEY, SECRET_KEY, paper=True)
@@ -43,7 +43,7 @@ def sendEmail(title, body):
     print(resp["requestId"])
 
 
-def get_prices(ticker, limit):
+def getPrices(ticker, limit):
     stock_bars_data = StockBarsRequest(
         symbol_or_symbols=ticker, 
         start=pd.to_datetime(start_date),
@@ -57,13 +57,13 @@ def get_prices(ticker, limit):
 
     return bars
 
-def get_rsi(data, period):
+def getRSI(data, period):
     return ta.RSI(data.get('c'), timeperiod=period)
 
-def get_moving_average(data, window):
+def getMA(data, window):
     return data.get('c').rolling(window=window).mean()
 
-def open_position(ticker, amount):
+def openPosition(ticker, amount):
     cash_available = float(trading_client.get_account().cash)
 
     market_order_data = MarketOrderRequest(
@@ -77,7 +77,7 @@ def open_position(ticker, amount):
         symbol_or_symbols=ticker
     )
 
-    price = pd.DataFrame(data_client.get_stock_latest_bar(price_data))
+    closing_price = pd.DataFrame(data_client.get_stock_latest_bar(price_data)).get(ticker)['c']
 
     if cash_available >= amount:
         positions = trading_client.get_all_positions()
@@ -86,12 +86,25 @@ def open_position(ticker, amount):
         for v in positions:
             if v.symbol == ticker: flag = True
 
-        if(flag): return False
+        if(flag):
+            title = f"No modifications to {ticker} position"
+            body = f"""Attempted to buy ${market_order_data.notional} worth of shares of {ticker} at ${closing_price} per share 
+                    but found position already open under this ticker."""
+            sendEmail(title=title, body=body)
+            return False
         else:
+            title = f"Submitted BUY order for {ticker}"
+            body = f"Submitted BUY order of ${market_order_data.notional} worth of shares of {ticker} at ${closing_price} per share."
             trading_client.close_all_positions(cancel_orders=True)
             trading_client.submit_order(market_order_data)
+            sendEmail(title=title, body=body)
             return True
-    else: return False
+    else:
+        title = f"Not enough capital to submit order for {ticker}"
+        body = f"""Attempted to buy ${market_order_data.notional} worth of shares of {ticker} at ${closing_price} per share 
+                but found not enough capital to submit order."""
+        sendEmail(title=title, body=body)
+        return False
 
 def main():
     # tickers
@@ -113,49 +126,49 @@ def main():
     sqqq_rsi_period = 10
 
     # prices
-    spy_data = get_prices(spy_ticker, spy_ma_period)
-    tqqq_data = get_prices(tqqq_ticker, max(tqqq_rsi_period, tqqq_ma_period))
-    spxl_data = get_prices(spy_ticker, spxl_rsi_period)
-    sqqq_data = get_prices(spy_ticker, tqqq_rsi_period)
-    tlt_data = get_prices(tlt_ticker, tlt_rsi_period)
+    spy_data = getPrices(spy_ticker, spy_ma_period)
+    tqqq_data = getPrices(tqqq_ticker, max(tqqq_rsi_period, tqqq_ma_period))
+    spxl_data = getPrices(spy_ticker, spxl_rsi_period)
+    sqqq_data = getPrices(spy_ticker, tqqq_rsi_period)
+    tlt_data = getPrices(tlt_ticker, tlt_rsi_period)
 
     # calculate indicators
-    spy_rsi = get_rsi(spy_data, spy_rsi_period)[len(spy_data) - 1]
-    tqqq_rsi = get_rsi(tqqq_data, tqqq_rsi_period)[len(tqqq_data) - 1]
-    spxl_rsi = get_rsi(spxl_data, spxl_rsi_period)[len(spxl_data) - 1]
-    tqqq_ma = get_moving_average(tqqq_data, tqqq_ma_period)[len(tqqq_data) - 1]
-    sqqq_rsi = get_rsi(sqqq_data, sqqq_rsi_period)[len(sqqq_data) - 1]
+    spy_rsi = getRSI(spy_data, spy_rsi_period)[len(spy_data) - 1]
+    tqqq_rsi = getRSI(tqqq_data, tqqq_rsi_period)[len(tqqq_data) - 1]
+    spxl_rsi = getRSI(spxl_data, spxl_rsi_period)[len(spxl_data) - 1]
+    tqqq_ma = getMA(tqqq_data, tqqq_ma_period)[len(tqqq_data) - 1]
+    sqqq_rsi = getRSI(sqqq_data, sqqq_rsi_period)[len(sqqq_data) - 1]
 
     # current prices
     spy_current_price = float(spy_data.get('c').iloc[-1])
     tqqq_current_price = float(tqqq_data.get('c').iloc[-1])
 
     # strat execution
-    if spy_current_price > get_moving_average(spy_data, spy_ma_period)[len(spy_data) - 1]:
+    if spy_current_price > getMA(spy_data, spy_ma_period)[len(spy_data) - 1]:
         if tqqq_rsi > 79:
-            open_position(uvxy_ticker, float(trading_client.get_account().cash))
+            openPosition(uvxy_ticker, float(trading_client.get_account().cash))
         else:
             if spxl_rsi > 80:
-                open_position(uvxy_ticker, float(trading_client.get_account().cash))
+                openPosition(uvxy_ticker, float(trading_client.get_account().cash))
             else:
-                open_position(tqqq_ticker, float(trading_client.get_account().cash))
+                openPosition(tqqq_ticker, float(trading_client.get_account().cash))
     else:
         if tqqq_rsi < 31:
-            open_position(tecl_ticker, float(trading_client.get_account().cash))
+            openPosition(tecl_ticker, float(trading_client.get_account().cash))
         else:
             if spy_rsi < 30:
-                open_position(upro_ticker, float(trading_client.get_account().cash))
+                openPosition(upro_ticker, float(trading_client.get_account().cash))
             else:
                 if tqqq_current_price < tqqq_ma:
-                    if sqqq_rsi > get_rsi(tlt_data, 10)[len(sqqq_data) - 1]:
-                        open_position(sqqq_ticker, float(trading_client.get_account().cash))
+                    if sqqq_rsi > getRSI(tlt_data, 10)[len(sqqq_data) - 1]:
+                        openPosition(sqqq_ticker, float(trading_client.get_account().cash))
                     else:
-                        open_position(tlt_ticker, float(trading_client.get_account().cash))
+                        openPosition(tlt_ticker, float(trading_client.get_account().cash))
                 else:
                     if sqqq_rsi < 31:
-                        open_position(sqqq_ticker, float(trading_client.get_account().cash))
+                        openPosition(sqqq_ticker, float(trading_client.get_account().cash))
                     else:
-                        open_position(tqqq_ticker, float(trading_client.get_account().cash))
+                        openPosition(tqqq_ticker, float(trading_client.get_account().cash))
 
 if __name__ == "__main__":
     main()
