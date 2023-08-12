@@ -81,6 +81,7 @@ def openPosition(ticker, amount):
 
     if cash_available >= amount:
         positions = trading_client.get_all_positions()
+        orders = trading_client.get_orders()
         flag = False
 
         for v in positions:
@@ -89,10 +90,17 @@ def openPosition(ticker, amount):
         if(flag):
             title = f"No modifications to {ticker} position"
             body = f"""Attempted to buy ${market_order_data.notional} worth of shares of {ticker} at ${closing_price} per share 
-                    but found position already open under this ticker."""
+                    but found position or order already open under this ticker."""
             sendEmail(title=title, body=body)
             return False
         else:
+            for x in orders:
+                if x.symbol == ticker:
+                    title = f"No modifications to {ticker} order"
+                    body = f"""Attempted to submit BUY order of ${market_order_data.notional} 
+                            worth of shares of {ticker} at ${closing_price} per share but found order already open."""
+                    sendEmail(title=title, body=body)
+                    return False
             title = f"Submitted BUY order for {ticker}"
             body = f"Submitted BUY order of ${market_order_data.notional} worth of shares of {ticker} at ${closing_price} per share."
             trading_client.close_all_positions(cancel_orders=True)
