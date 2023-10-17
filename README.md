@@ -4,7 +4,7 @@ It's a trading bot that I'm building using the [Alpaca API](https://github.com/a
 
 # Usage
 
-Though in early stages, I'm currently building the bot according to an ETF called TQQQ that tracks the QQQ. TQQQ is a leveraged ETF, meaning that basically if the market is down 5 basis points, you're down 10/15/20/50 basis points depending on how leveraged the asset you're trading is. In this case TQQQ is leveraged 3 times QQQ, so if QQQ is down 5%, you're down 15%.
+Though in early stages I'm currently building the bot according to an ETF called TQQQ that tracks the QQQ. TQQQ is a leveraged ETF, meaning that basically if the market is down 5 basis points, you're down 10/15/20/50 basis points depending on how leveraged the asset you're trading is. In this case TQQQ is leveraged 3 times QQQ, so if QQQ is down 5%, you're down 15%.
 
 Leveraged assets are seriously risky. **DO NOT trade assets such as options, futures, CFDs** if you don't know what you're getting into as you may incur in big losses if proper risk and portfolio management is not implemented correctly in the strategy.
 
