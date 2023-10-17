@@ -23,3 +23,5 @@ The bot can do the following things:
 # Additional things
 
 Please, do not use this bot to trade your money if **you DO NOT understand** its content and the strategies utilized by it.
+
+UPDATE 17 OCT 2023: I'm no longer working on this bot and this will be an abbandoned project from now on. A big thank you to anyone that stumbled upon this wondeful bot of mine, I had a blast making it.
